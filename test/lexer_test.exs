@@ -26,8 +26,7 @@ defmodule Telnex.LexerTest do
              "l",
              "d",
              :are_you_there,
-             {:will, 123},
-             {:invalid, 220}
+             {:will, 123}
            ]
   end
 
@@ -36,15 +35,13 @@ defmodule Telnex.LexerTest do
     lexer = %Lexer{}
 
     string =
-      <<255, 240, 255, 241, 255, 242, 255, 243, 255, 244, 255, 245, 255, 246, 255, 247, 255, 248,
-        255, 249, 255, 250>>
+      <<255, 241, 255, 242, 255, 243, 255, 244, 255, 245, 255, 246, 255, 247, 255, 248, 255, 249>>
 
     # WHEN
     {tokens, _lexer} = Lexer.put(lexer, string)
 
     # THEN
     assert tokens == [
-             :se,
              :nop,
              :data_mark,
              :break,
@@ -53,8 +50,7 @@ defmodule Telnex.LexerTest do
              :are_you_there,
              :erase_character,
              :erase_line,
-             :go_ahead,
-             :sb
+             :go_ahead
            ]
   end
 
@@ -69,5 +65,26 @@ defmodule Telnex.LexerTest do
 
     # THEN
     assert tokens == [will: 1, wont: 2, do: 3, dont: 4]
+  end
+
+  test "subnegotiation" do
+    # GIVEN
+    lexer = %Lexer{}
+
+    string = <<"abc", 255, 250, 123, 1, 2, 3, 4, 255, 240, "123">>
+
+    # WHEN
+    {tokens, _lexer} = Lexer.put(lexer, string)
+
+    # THEN
+    assert tokens == [
+             "a",
+             "b",
+             "c",
+             {:subnegotiation, 123, <<1, 2, 3, 4>>},
+             "1",
+             "2",
+             "3"
+           ]
   end
 end
